@@ -6,19 +6,20 @@ import java.util.*;
 import java.util.regex.*;
 public class Main {
     /*
-    TODO: separate by floor,
-    TODO: separate by day!!!, color by day
     TODO: color by double booths? or rotate and center text
     TODO: comment code
     TODO: user input
-    TODO: make more robust (ex. clean csv input - remove empty lines, add exception handling for converting to Integer)
+    TODO: make more robust
      */
 
     public static void main(String[] args) throws Exception {
         readInBoothPixels(1,0, 1,2,3);
-        //readInBoothData(1,0, 1,2,3,4);
+        readInBoothData(1,0, 1,2,3,4);
+        //readInBoothPixels(1,0, 1,2,3);
         Booth.printAllBooths();
-        labelImage(Booth.getBooths());
+        File inputF = new File("2017_Booth_outline_arena_1.jpg");
+        File outputF = new File("test.png");
+        labelImage(inputF, outputF, Booth.Floor.ARENA, Booth.Day.FIRST);
 
         //cleanString("London Consulting Group", getUnwantedWords());
     }
@@ -44,10 +45,22 @@ public class Main {
                 brPixels.readLine(); // skip header rows
             }
             while ((line = brPixels.readLine()) != null) {
+                if(line.replaceAll(",", "").equals("")){
+                    continue;
+                }
                 String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // split on the comma only if that comma has zero, or an even number of quotes ahead of it
-                Booth.Floor f = Booth.convertStringToFloor(data[floorCol]);
-                HashMap<String, Booth> booths = Booth.getBooths();
-                setFloorAndLoc(booths, data[boothCol], f, Integer.valueOf(data[xCol]), Integer.valueOf(data[yCol]));
+                Booth.Floor f = (data.length > floorCol) ? Booth.convertStringToFloor(data[floorCol]) : null;
+                String boothNum = (data.length > boothCol) ? data[boothCol] : "";
+                int x, y;
+                try {
+                    x = (data.length > xCol) ? Integer.valueOf(data[xCol]) : 0;
+                    y = (data.length > yCol) ? Integer.valueOf(data[yCol]) : 0;
+                }
+                catch(NumberFormatException e){
+                    x = 0;
+                    y = 0;
+                }
+                Booth.setFloorAndLoc(boothNum, f, x, y);
             }
 
         }
@@ -68,22 +81,25 @@ public class Main {
                 brBooths.readLine(); // skip header rows
             }
             while ((line = brBooths.readLine()) != null) {
+                if(line.replaceAll(",", "").equals("")){
+                    continue;
+                }
                 String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // split on the comma only if that comma has zero, or an even number of quotes ahead of it
-                Booth.Day day;
-                if(data[firstCol].equals("YES")){
+                Booth.Day day = null;
+                if((data.length > firstCol) ? data[firstCol].equals("YES") : false){
                     day = Booth.Day.FIRST;
                 }
-                else if(data[secondCol].equals("YES")){
+                else if((data.length > secondCol) ? data[secondCol].equals("YES") : false){
                     day = Booth.Day.SECOND;
                 }
-                else{
+                else if((data.length > bothCol) ? data[bothCol].equals("YES") : false){
                     day = Booth.Day.BOTH;
                 }
-                HashMap<String, Booth> booths = Booth.getBooths();
-                String[] boothNums = data[boothCol].split(";");
-                Booth b = setCompanyAndDay(booths, boothNums[0], data[nameCol], day);
+                String[] boothNums = (data.length > boothCol) ? data[boothCol].split(";") : new String[]{""};
+                String name = (data.length > nameCol) ? data[nameCol] : boothNums[0];
+                Booth b = Booth.setCompanyAndDay(boothNums[0], name, day);
                 if(boothNums.length > 1) {
-                    Booth b2 = setCompanyAndDay(booths, boothNums[1], data[nameCol], day);
+                    Booth b2 = Booth.setCompanyAndDay(boothNums[1], name, day);
                     b.setOtherBooth(b2);
                 }
             }
@@ -95,46 +111,33 @@ public class Main {
             System.out.println(e);
         }
     }
-    public static Booth setFloorAndLoc(HashMap <String, Booth> booths, String num, Booth.Floor floor, int x, int y){
-        Booth b = booths.get(num);
-        if(b != null){
-            b.setFloor(floor);
-            b.setXCoord(x);
-            b.setYCoord(y);
-        }
-        else {
-            b = new Booth(num, floor, Booth.Day.FIRST, x, y, num, null);
-        }
-        return b;
-    }
-    public static Booth setCompanyAndDay(HashMap <String, Booth> booths, String num, String name, Booth.Day day){
-        Booth b = booths.get(num);
-        if(b != null){
-            b.setCompanyName(name);
-            b.setDay(day);
-        }
-        else {
-            b = new Booth(num, Booth.Floor.ARENA, day, 0, 0, name, null);
-        }
-        return b;
-    }
-    public static void labelImage(HashMap<String, Booth> booths){
+
+    //TODO: fix this one for first and second day split
+    public static void labelImage(File inputF, File outputF, Booth.Floor floor, Booth.Day day){
         try {
-            final BufferedImage image = ImageIO.read(new File("2017_Booth_outline_arena_1.jpg"));
+            final BufferedImage image = ImageIO.read(inputF);
             Graphics g = image.getGraphics();
             g.setFont(g.getFont().deriveFont(14f));
             g.setColor(Color.BLUE);
             String unwantedWords = getUnwantedWords();
-            for (Booth b : booths.values()) {
+            Set<Booth> booths = Booth.getBoothsOnFloorAndDay(floor, day);
+            for (Booth b : booths) {
                 int letterHeight = g.getFont().getSize();
                 String [] name = cleanString(b.getCompanyName(), unwantedWords);
                 for(int i = 0; i < ((name.length > 3) ? 3 : name.length); i++){
                     String s = name[i];
-                    g.drawString(s, b.getXCoord(), b.getYCoord() + (i + 1) * letterHeight);
+                    if(b.getDay() == Booth.Day.BOTH){
+                        g.setColor(Color.RED);
+                        g.drawString(s, b.getXCoord(), b.getYCoord() + (i + 1) * letterHeight);
+                        g.setColor(Color.BLUE);
+                    }
+                    else {
+                        g.drawString(s, b.getXCoord(), b.getYCoord() + (i + 1) * letterHeight);
+                    }
                 }
             }
             g.dispose();
-            ImageIO.write(image, "png", new File("test.png"));
+            ImageIO.write(image, "png", outputF);
         }
         catch(IOException e){
             System.out.println(e);
@@ -147,153 +150,5 @@ public class Main {
         str = stopWords.matcher(str).replaceAll(""); // remove unwanted words
         String [] name = str.split("[ |\\-|/]"); // split on spaces, dashes, and forward slashes
         return name;
-    }
-}
-
-class Booth implements Comparable<Booth>{
-
-    public static enum Floor{
-        ARENA, CONCOURSE, MEZZANINE
-    }
-
-    public static enum Day{
-        FIRST, SECOND, BOTH
-    }
-
-    public static HashMap<String, Booth> booths = new HashMap<String, Booth>(); //map number to booth
-    private String number;
-    private Floor floor;
-    private Day day;
-    private int xCoord;
-    private int yCoord;
-    private String companyName;
-    private Booth otherBooth; // if a company has two booths, use this variable to connect them
-
-    public Booth(){
-        number = "";
-        floor = Floor.ARENA;
-        day = Day.FIRST;
-        xCoord = 0;
-        yCoord = 0;
-        companyName = "";
-        otherBooth = null;
-    }
-
-    public Booth(String num, Floor f, Day d, int x, int y, String name, Booth other){
-        number = num;
-        floor = f;
-        day = d;
-        xCoord = x;
-        yCoord = y;
-        companyName = name;
-        otherBooth = other;
-        booths.put(number, this);
-    }
-
-    public static void cleanCompanyNames(){
-        for(Booth b: booths.values()){
-        }
-    }
-    public String getNumber(){
-        return number;
-    }
-
-    public Floor getFloor() {
-        return floor;
-    }
-
-    public Day getDay(){
-        return day;
-    }
-
-    public int getXCoord() {
-        return xCoord;
-    }
-
-    public int getYCoord() {
-        return yCoord;
-    }
-
-    public String getCompanyName() {
-        return companyName;
-    }
-
-    public Booth getOtherBooth() {
-        return otherBooth;
-    }
-
-    public static HashMap<String, Booth> getBooths(){
-        return booths;
-    }
-
-    public static Floor convertStringToFloor(String s){
-        s = s.toUpperCase().trim();
-        switch(s){
-            case "ARENA": return Floor.ARENA;
-            case "CONCOURSE": return Floor.CONCOURSE;
-            case "MEZZANINE": return Floor.MEZZANINE;
-            default: return null;
-        }
-    }
-
-    public void setFloor(Floor floor) {
-        this.floor = floor;
-    }
-
-    public void setDay(Day day) {
-        this.day = day;
-    }
-
-    public void setXCoord(int xCoord) {
-        this.xCoord = xCoord;
-    }
-
-    public void setYCoord(int yCoord) {
-        this.yCoord = yCoord;
-    }
-
-    public void setCompanyName(String companyName) {
-        this.companyName = companyName;
-    }
-
-    public void setOtherBooth(Booth otherBooth) {
-        otherBooth.otherBooth = this;
-        this.otherBooth = otherBooth;
-    }
-
-    @Override
-    public String toString(){
-        String s = "Number: " + number + "\t\tFloor: " + floor + "\tDay: " + day + "\tX: " + xCoord + "\tY:" + yCoord;
-        s +=  "\nCompany Name: " + companyName;
-        if(otherBooth != null){
-            s += "\tOther Booth: " + otherBooth.number;
-        }
-        return s;
-    }
-
-    public static void printAllBooths(){
-        ArrayList<Booth> sortedBooths = new ArrayList<Booth>(booths.values());
-        Collections.sort(sortedBooths);
-        for(Booth b: sortedBooths){
-            System.out.println(b + "\n");
-        }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Booth booth = (Booth) o;
-        return Objects.equals(number, booth.number);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(number);
-    }
-
-    @Override
-    public int compareTo(Booth b2){
-        return this.number.compareTo(b2.number);
     }
 }
