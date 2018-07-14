@@ -20,18 +20,53 @@ public class Booth implements Comparable<Booth>{
     private int yCoord;
     private String companyName;
     private Booth otherBooth; // if a company has two booths, use this variable to connect them
-
+    private boolean drawn; // already drawn
+    private String companyData; // booth companyData in excel file
     public Booth(){
-        number = "";
+        number = null;
         floor = null;
         day = null;
         xCoord = 0;
         yCoord = 0;
-        companyName = "";
+        companyName = null;
         otherBooth = null;
+        drawn = false;
+        companyData = null;
     }
+    public Booth(String num, Floor f, int x, int y){ // add pixel information only. will replace old boothPixels booth if already exists
+        this(num, f, null, x, y, num, null, null);
+        boothPixels.put(num, this); // add to boothPixels map
 
-    public Booth(String num, Floor f, Day d, int x, int y, String name, Booth other){
+        // if already in the first or second day maps, set x and y loc
+        Booth fb = firstDayBooths.get(num);
+        Booth sb = secondDayBooths.get(num);
+        if(fb != null || sb != null){
+            if(fb != null) {
+                fb.setFloor(f);
+                fb.setXCoord(x);
+                fb.setYCoord(y);
+            }
+            if(sb != null){
+                sb.setFloor(f);
+                sb.setXCoord(x);
+                sb.setYCoord(y);
+            }
+        }
+    }
+    public Booth(String num, String name, Booth.Day day, String data){
+        this(num, null, day, 0, 0, name, null, data);
+        addToMap(this, num, day);
+
+        // if already in the pixel map
+        Booth bp = boothPixels.get(num);
+        if(bp != null){
+            this.floor = bp.getFloor();
+            this.xCoord = bp.getX();
+            this.yCoord = bp.getY();
+        }
+
+    }
+    private Booth(String num, Floor f, Day d, int x, int y, String name, Booth other, String data){
         number = num;
         floor = f;
         day = d;
@@ -39,14 +74,12 @@ public class Booth implements Comparable<Booth>{
         yCoord = y;
         companyName = name;
         otherBooth = other;
-        addToMap(this, number, day);
+        drawn = false;
+        companyData = data;
     }
 
     private static void addToMap(Booth b, String number, Day day){
         if(day == null){
-            if(b.xCoord != 0 && b.yCoord != 0){
-                boothPixels.put(number, b);
-            }
             return;
         }
         switch(day){
@@ -57,44 +90,8 @@ public class Booth implements Comparable<Booth>{
                 secondDayBooths.put(number, b);
                 break;
             }
-            default:{
-                if(b.xCoord != 0 && b.yCoord != 0){
-                    boothPixels.put(number, b);
-                }
-            } break;
+            default: break;
         }
-    }
-
-    public static void setFloorAndLoc(String num, Booth.Floor floor, int x, int y){
-        Booth fb = firstDayBooths.get(num);
-        Booth sb = secondDayBooths.get(num);
-        if(fb != null || sb != null){ // if already in the first or second day maps
-            if(fb != null) {
-                fb.setFloor(floor);
-                fb.setXCoord(x);
-                fb.setYCoord(y);
-            }
-            if(sb != null){
-                sb.setFloor(floor);
-                sb.setXCoord(x);
-                sb.setYCoord(y);
-            }
-        }
-        else {
-            new Booth(num, floor, null, x, y, num, null); // otherwise add to boothPixels map
-        }
-    }
-
-    public static Booth setCompanyAndDay(String num, String name, Booth.Day day){
-        Booth bp = boothPixels.get(num);
-        Booth b;
-        if(bp != null){ // if already in the pixel map
-            b = new Booth(num, bp.getFloor(), day, bp.getXCoord(), bp.getYCoord(), name, null);
-        }
-        else {
-            b = new Booth(num, null, day, 0, 0, name, null); // otherwise add to day maps without floor & pixel info
-        }
-        return b;
     }
 
     public String getNumber(){
@@ -109,11 +106,11 @@ public class Booth implements Comparable<Booth>{
         return day;
     }
 
-    public int getXCoord() {
+    public int getX() {
         return xCoord;
     }
 
-    public int getYCoord() {
+    public int getY() {
         return yCoord;
     }
 
@@ -123,6 +120,14 @@ public class Booth implements Comparable<Booth>{
 
     public Booth getOtherBooth() {
         return otherBooth;
+    }
+
+    public boolean getDrawn() { return drawn;}
+
+    public String getCompanyData() {return companyData;}
+
+    public void setDrawn(boolean d){
+        drawn = d;
     }
 
     public static HashMap<String, Booth> getFirstDayBooths(){
