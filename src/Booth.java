@@ -22,17 +22,7 @@ public class Booth implements Comparable<Booth>{
     private Booth otherBooth; // if a company has two booths, use this variable to connect them
     private boolean drawn; // already drawn
     private String companyData; // booth companyData in excel file
-    public Booth(){
-        number = null;
-        floor = null;
-        day = null;
-        xCoord = 0;
-        yCoord = 0;
-        companyName = null;
-        otherBooth = null;
-        drawn = false;
-        companyData = null;
-    }
+
     public Booth(String num, Floor f, int x, int y){ // add pixel information only. will replace old boothPixels booth if already exists
         this(num, f, null, x, y, num, null, null);
         boothPixels.put(num, this); // add to boothPixels map

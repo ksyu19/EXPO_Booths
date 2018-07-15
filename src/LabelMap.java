@@ -8,79 +8,64 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class LabelMap {
-    public static void readInBoothPixels(int skipRows, int floorCol, int boothCol, int xCol, int yCol){
-        // skipRows = number of rows to skip
-        try {
-            final BufferedReader brPixels = new BufferedReader(new FileReader("Booth_Pixels.csv"));
-            String line = "";
-            for(int i = 0; i < skipRows; i++){
-                brPixels.readLine(); // skip header rows
-            }
-            while ((line = brPixels.readLine()) != null) {
-                if(line.replaceAll(",", "").equals("")){
-                    continue;
-                }
-                String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // split on the comma only if that comma has zero, or an even number of quotes ahead of it
-                Booth.Floor f = (data.length > floorCol) ? Booth.convertStringToFloor(data[floorCol]) : null;
-                String boothNum = (data.length > boothCol) ? data[boothCol] : "";
-                int x, y;
-                try {
-                    x = (data.length > xCol) ? Integer.valueOf(data[xCol]) : 0;
-                    y = (data.length > yCol) ? Integer.valueOf(data[yCol]) : 0;
-                }
-                catch(NumberFormatException e){
-                    x = 0;
-                    y = 0;
-                }
-                new Booth(boothNum, f, x, y);
-            }
-
+    public static void readInBoothPixels(String filename, Integer skipRows, Integer floorCol, Integer boothCol, Integer xCol, Integer yCol)throws IOException{
+        final BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line = "";
+        for(int i = 0; i < skipRows; i++){
+            br.readLine(); // skip header rows
         }
-        catch(FileNotFoundException e){
-            System.out.println(e);
-        }
-        catch(IOException e){
-            System.out.println(e);
+        while ((line = br.readLine()) != null) {
+            if(line.replaceAll(",", "").equals("")){
+                continue;
+            }
+            String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // split on the comma only if that comma has zero, or an even number of quotes ahead of it
+            Booth.Floor f = (data.length > floorCol) ? Booth.convertStringToFloor(data[floorCol]) : null;
+            String boothNum = (data.length > boothCol) ? data[boothCol] : "";
+            int x, y;
+            try {
+                x = (data.length > xCol) ? Integer.valueOf(data[xCol]) : 0;
+                y = (data.length > yCol) ? Integer.valueOf(data[yCol]) : 0;
+            }
+            catch(NumberFormatException e){
+                x = 0;
+                y = 0;
+            }
+            new Booth(boothNum, f, x, y);
         }
     }
 
-    public static void readInBoothData(int skipRows, int nameCol, int firstCol, int secondCol, int bothCol, int boothCol){
+    public static void readInCompanyData(String filename, Integer skipRows, Integer nameCol, Integer firstCol, Integer secondCol, Integer bothCol, Integer boothCol) throws IOException{
         // skipRows = number of rows to skip
-        try {
-            final BufferedReader brBooths = new BufferedReader(new FileReader("EXPO_Booths_Example.csv"));
-            String line = "";
-            for(int i = 0; i < skipRows; i++){
-                brBooths.readLine(); // skip header rows
+        final BufferedReader br = new BufferedReader(new FileReader(filename));
+        String line = "";
+        for(int i = 0; i < skipRows; i++){
+            br.readLine(); // skip header rows
+        }
+        while ((line = br.readLine()) != null) {
+            if(line.replaceAll(",", "").equals("")){
+                continue;
             }
-            while ((line = brBooths.readLine()) != null) {
-                if(line.replaceAll(",", "").equals("")){
-                    continue;
-                }
-                String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // split on the comma only if that comma has zero, or an even number of quotes ahead of it
-                Booth.Day day = null;
-                if((data.length > firstCol) ? data[firstCol].equals("YES") : false){
+            String[] data = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // split on the comma only if that comma has zero, or an even number of quotes ahead of it
+            Booth.Day day = null;
+            if(firstCol == null && secondCol == null && bothCol == null){
+                day = Booth.Day.FIRST;
+            }
+            else {
+                if (firstCol != null && (data.length > firstCol) ? data[firstCol].equals("YES") : false) {
                     day = Booth.Day.FIRST;
-                }
-                else if((data.length > secondCol) ? data[secondCol].equals("YES") : false){
+                } else if (secondCol != null && (data.length > secondCol) ? data[secondCol].equals("YES") : false) {
                     day = Booth.Day.SECOND;
-                }
-                else if((data.length > bothCol) ? data[bothCol].equals("YES") : false){
+                } else if (bothCol != null && (data.length > bothCol) ? data[bothCol].equals("YES") : false) {
                     day = Booth.Day.BOTH;
                 }
-                String[] boothNums = (data.length > boothCol) ? data[boothCol].split(";") : new String[]{""};
-                String name = (data.length > nameCol) ? data[nameCol] : boothNums[0];
-                Booth b = new Booth(boothNums[0], name, day, line);
-                if(boothNums.length > 1) {
-                    Booth b2 = new Booth(boothNums[1], name, day, line);
-                    b.setOtherBooth(b2);
-                }
             }
-        }
-        catch(FileNotFoundException e){
-            System.out.println(e);
-        }
-        catch(IOException e){
-            System.out.println(e);
+            String[] boothNums = (data.length > boothCol) ? data[boothCol].split(";") : new String[]{""};
+            String name = (data.length > nameCol) ? data[nameCol] : boothNums[0].trim();
+            Booth b = new Booth(boothNums[0].trim(), name, day, line);
+            if(boothNums.length > 1) {
+                Booth b2 = new Booth(boothNums[1].trim(), name, day, line);
+                b.setOtherBooth(b2);
+            }
         }
     }
 
@@ -91,9 +76,21 @@ public class LabelMap {
             g.setFont(g.getFont().deriveFont(12f));
             final Color ONE_DAY = new Color(0,102,0); // GREEN
             final Color BOTH_DAYS = Color.BLUE;
+            final Color DOUBLE = Color.RED;
             Set<Booth> booths = Booth.getBoothsOnFloorAndDay(floor, day);
             int letterHeight = g.getFontMetrics().getAscent();
             Color col;
+            // create legend
+            int legendX = 1000;
+            int legendY = 60;
+            g.setColor(Color.BLACK);
+            g.drawString("Legend", legendX, legendY + letterHeight + 10);
+            g.setColor(ONE_DAY);
+            g.drawString(day + " DAY ONLY", legendX, legendY + 2 * (letterHeight + 10));
+            g.setColor(BOTH_DAYS);
+            g.drawString("BOTH DAYS", legendX, legendY + 3 * (letterHeight+ 10));
+            g.setColor(DOUBLE);
+            g.drawString("DOUBLE BOOTHS", legendX, legendY + 4 * (letterHeight + 10));
             for (Booth b : booths) {
                 /*if(b.getDrawn()){ // already drawn
                     continue;
@@ -129,7 +126,7 @@ public class LabelMap {
                         g.drawString(s, b.getX(), b.getY() + (i+1) * letterHeight);
                     }
                     if(b.getOtherBooth()!=null) {
-                        g.setColor(Color.RED);
+                        g.setColor(DOUBLE);
                         g.drawLine(b.getX()-2, b.getY(), b.getOtherBooth().getX()-2, b.getOtherBooth().getY());
                     }
                // } // end not double booths
