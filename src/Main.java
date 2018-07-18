@@ -17,12 +17,21 @@ import java.util.List;
 
 public class Main extends Application {
     /*
-    TODO: comment code
     TODO: make more robust
      */
+
+    /**
+     * Main
+     * @param args input args
+      */
     public static void main(String[] args) {
         launch(args);
     }
+
+    /**
+     * Start - JavaFX main function
+     * @param primaryStage initial stage
+     */
     @Override
     public void start(Stage primaryStage) {
         GridPane pane = new GridPane();
@@ -118,6 +127,7 @@ public class Main extends Application {
             companyInputsLayout.getChildren().add(i, companyInputs.get(i).getLayout());
         }
     }
+
     /**
      * Set up the column inputs for the pixel file.
      * @param pixelInputs ColumnInputs will be added to this ArrayList
@@ -143,14 +153,24 @@ public class Main extends Application {
 }
 
 class LabelMapsHandler implements EventHandler<ActionEvent>{
-    FileChooserHandler companyFileHandler;
-    ArrayList<NumberField> companyInputs;
-    FileChooserHandler pixelFileHandler;
-    ArrayList<NumberField> pixelInputs;
-    AddMapsHandler addMapsHandler;
-    ComboBox<Booth.Day> dayComboBox;
-    Text log;
+    private FileChooserHandler companyFileHandler;
+    private ArrayList<NumberField> companyInputs;
+    private FileChooserHandler pixelFileHandler;
+    private ArrayList<NumberField> pixelInputs;
+    private AddMapsHandler addMapsHandler;
+    private ComboBox<Booth.Day> dayComboBox;
+    private Text log;
 
+    /**
+     * Constructor - make sure label handler has access to user input values
+     * @param companyFileHandler FileChooserHandler for company booth .csv
+     * @param companyInputs column inputs for company booth .csv
+     * @param pixelFileHandler FileChooserHandler for booth pixels .csv
+     * @param pixelInputs column inputs for booth pixels .csv
+     * @param mapHandler AddMapsHandler
+     * @param dayComboBox day selector
+     * @param log Text log for any issues
+     */
     public LabelMapsHandler(FileChooserHandler companyFileHandler, ArrayList<NumberField> companyInputs, FileChooserHandler pixelFileHandler, ArrayList<NumberField> pixelInputs, AddMapsHandler mapHandler, ComboBox<Booth.Day> dayComboBox, Text log){
         this.companyFileHandler = companyFileHandler;
         this.companyInputs = companyInputs;
@@ -160,6 +180,11 @@ class LabelMapsHandler implements EventHandler<ActionEvent>{
         this.dayComboBox = dayComboBox;
         this.log = log;
     }
+
+    /**
+     * Get user input values, read in booth data, and label map
+     * @param e event
+     */
     @Override
     public void handle(ActionEvent e){
        ArrayList<MapSelector> mapSelectors = addMapsHandler.getMapSelectors();

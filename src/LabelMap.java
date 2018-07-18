@@ -1,6 +1,6 @@
 import javax.imageio.ImageIO;
 import java.awt.*;
-//import java.awt.geom.AffineTransform;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Arrays;
@@ -118,7 +118,7 @@ public class LabelMap {
         for (Booth b : booths) {
             /*if(b.getDrawn()){ // already drawn
                 continue;
-            }  // for double booths */
+            }  // for rotating double booth labels */
             String [] name = cleanString(b.getCompanyName());
             switch(b.getDay()){
                 case BOTH:
@@ -132,7 +132,7 @@ public class LabelMap {
             }
             /*if(b.getOtherBooth() != null){
                 labelDoubleBooth(g, b, name, textHeight);
-            } // rotate and center double booths?
+            } // rotate and center double booths labels
             else { */
                 switch(floor){
                     case ARENA: break;
@@ -151,7 +151,7 @@ public class LabelMap {
                 }
                 if(b.getOtherBooth()!=null) {
                     g.setColor(DOUBLE);
-                    drawLineBetweenDoubleBooths(g, b, b.getOtherBooth());
+                    drawLineBetweenDoubleBooths(g, b);
                 }
            // } // end single booths
         }
@@ -181,15 +181,6 @@ public class LabelMap {
         g.drawString("DOUBLE BOOTHS", legendX, legendY + 4 * (textHeight + 10));
     }
 
-    /**
-     * Draw a line between booths occupied by the same company
-     * @param g Graphics2D object
-     * @param b1 first booth (order doesn't matter)
-     * @param b2 second booth
-     */
-    public static void drawLineBetweenDoubleBooths(Graphics2D g, Booth b1, Booth b2){
-        g.drawLine(b1.getX()-2, b1.getY(), b2.getX()-2, b2.getY());
-    }
 
     /**
      * Words to leave out of map labels
@@ -229,31 +220,46 @@ public class LabelMap {
         return Arrays.copyOfRange(name, 0, (name.length > 3 ? 3 : name.length)); // only keep up to first 3 words
     }
 
-    // CODE FOR ROTATING TEXT WHEN COMPANIES HAVE TWO BOOTHS - not very pretty or standardized, so not using
-    /*private static void labelDoubleBooth(Graphics2D g, Booth b, String[] name, int textHeight){
-        AffineTransform origAt = g.getTransform();
-        AffineTransform newAt = new AffineTransform();
+    /**
+     * Draw a line between booths occupied by the same company
+     * @param g Graphics2D object
+     * @param b booth
+     */
+    private static void drawLineBetweenDoubleBooths(Graphics2D g, Booth b){
         Booth b1 = getStartBooth(b);
-        double angle = getAngleInRadians(b1);
-        newAt.setToRotation(angle);
-        g.setTransform(newAt);
-        double newX, newY = 0; // new points after transformation
-        int[] centeredPoints = getCenteredPoints(g, b1, b1.getOtherBooth(), getLongestString(name), textHeight);
-        int oldX = centeredPoints[0];
-        int oldY = centeredPoints[1];
-        for (int i = 0; i < name.length; i++) {
-            String s = name[i];
-            newX = (oldY) * Math.sin(angle) + (oldX)* Math.cos(angle);
-            newY = (oldY) * Math.cos(angle) - (oldX)* Math.sin(angle) + (i+1)*textHeight;
-            g.drawString(s, (int) newX, (int) newY);
-        }
-        g.setTransform(origAt);
-        b.setDrawn(true);
-        b.getOtherBooth().setDrawn(true);
+        Booth b2 = b1.getOtherBooth();
+        double totalDist = 3.0/2*getDistance(b1.getX(), b1.getY(), b2.getX(), b2.getY());
+        int[] endPoints = getPointsAlongLine(b1, b2, totalDist);
+        g.drawLine(b1.getX()-2, b1.getY(), endPoints[0]-2, endPoints[1]);
     }
-    private static int[] getCenteredPoints (Graphics2D g, Booth b1, Booth b2, String longest, int textHeight){
-        double totalDist = 2*getDistance(b1.getX(), b1.getY(), b2.getX(), b2.getY());
-        double distFromStart = (totalDist - g.getFontMetrics().stringWidth(longest))/2;
+
+    /**
+     * Get the booth that should start double booth labeling
+     * @param b booth
+     * @return b or b.getOtherBooth, depending on which should start
+     */
+    private static Booth getStartBooth(Booth b){
+        Booth o = b.getOtherBooth();
+        if(b.getX() < o.getX()){
+            return b;
+        }
+        if(o.getX() < b.getX()){
+            return o;
+        }
+        if(b.getY() < o.getY()){ // x's are equal - return the booth on top (reverse if rotating text for double booths)
+            return b;
+        }
+        return o;
+    }
+
+    /**
+     * Get a point along the line that connects two booths
+     * @param b1 start booth
+     * @param b2 end booth
+     * @param distFromStart distance from start booth towards end booth where the new end points should be
+     * @return int array, where index 0 contains the new x point and index 1 contains the new y point
+     */
+    private static int[] getPointsAlongLine(Booth b1, Booth b2, double distFromStart){
         int newX, newY = 0;
         if(b1.getY() == b2.getY()){ // slope is 0
             newX = (int)(b1.getX() + distFromStart);
@@ -272,9 +278,48 @@ public class LabelMap {
         }
         return new int[]{newX, newY};
     }
+
+    /**
+     * Get distance between two points
+     * @param x1 x value for one point
+     * @param y1 y value for one point
+     * @param x2 x value for other point
+     * @param y2 y value for other point
+     * @return distance
+     */
     private static double getDistance(int x1, int y1, int x2, int y2){
         return Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
     }
+
+    // CODE FOR ROTATING TEXT WHEN COMPANIES HAVE TWO BOOTHS - not very pretty or standardized, so not using
+    /*private static void labelDoubleBooth(Graphics2D g, Booth b, String[] name, int textHeight){
+        AffineTransform origAt = g.getTransform();
+        AffineTransform newAt = new AffineTransform();
+        Booth b1 = getStartBooth(b);
+        double angle = getAngleInRadians(b1);
+        newAt.setToRotation(angle);
+        g.setTransform(newAt);
+        double newX, newY = 0; // new points after transformation
+        int[] centeredPoints = getCenteredPoints(g, b1, b1.getOtherBooth(), getLongestString(name));
+        int oldX = centeredPoints[0];
+        int oldY = centeredPoints[1];
+        for (int i = 0; i < name.length; i++) {
+            String s = name[i];
+            newX = (oldY) * Math.sin(angle) + (oldX)* Math.cos(angle);
+            newY = (oldY) * Math.cos(angle) - (oldX)* Math.sin(angle) + (i+1)*textHeight;
+            g.drawString(s, (int) newX, (int) newY);
+        }
+        g.setTransform(origAt);
+        b.setDrawn(true);
+        b.getOtherBooth().setDrawn(true);
+    }
+
+    private static int[] getCenteredPoints (Graphics2D g, Booth b1, Booth b2, String longest){
+        double totalDist = 2*getDistance(b1.getX(), b1.getY(), b2.getX(), b2.getY());
+        double distFromStart = (totalDist - g.getFontMetrics().stringWidth(longest))/2;
+        return getPointsAlongLine(b1, b2, distFromStart);
+    }
+
     private static String getLongestString(String[] name){
         int len = 0;
         String longest = "";
@@ -287,21 +332,8 @@ public class LabelMap {
         return longest;
     }
 
-    private static Booth getStartBooth(Booth b){
-        Booth o = b.getOtherBooth();
-        if(b.getX() < o.getX()){
-            return b;
-        }
-        if(o.getX() < b.getX()){
-            return o;
-        }
-        if(b.getY() > o.getY()){ // x's are equal - return the booth with the lower y
-            return b;
-        }
-        return o;
-    }
     private static double getAngleInRadians(Booth b1){
         Booth b2 = b1.getOtherBooth();
         return Math.atan2(b2.getY() - b1.getY(), b2.getX() - b1.getX());
-    }*/
+    } */
 }
