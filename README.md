@@ -1,16 +1,16 @@
-#EXPO_Booths
+# EXPO_Booths
 
 Speed up booth-labeling process for career fair planning (Designed for the UT Austin Engineering Career EXPO).
-See the example_output folder for sample results. 
+See the example_output folder for sample results.
 
-##User Guide
+## User Guide
 
-###Prepare booth maps:
+### Prepare booth maps:
 If maps are .pdf files, convert them to image files (.jpg, .png).
 You can convert the files through various online tools such as https://pdf2jpg.net/
 
-###Prepare two .csv files which contain the information needed to label the booths:
-```
+### Prepare two .csv files which contain the information needed to label the booths:
+
 **File 1: Company Info**
 Company Name | FirstDay | SecondDay | Both | Booths
 -------------|----------|-----------|------|-------
@@ -39,11 +39,11 @@ The Booth Pixels file must have all four of the above columns. Floor values can 
 booths in the Company Info file. X and Y pixels are the desired locations for the top-left corner of each label. These
 can be determined using programs such as Paint.
 The included Booth_Pixels.csv file already has pixel information for each booth in the included map .jpg files.
-```
+
 For both files, the specific names of the column headers are unimportant. Additional columns are also allowed.
 
-###Run the application:
-```
+### Run the application:
+
 1. Download the EXPO_Booths.jar file (in out/artifacts/EXPO_Booths_jar folder), and put it in the same folder as the
 .csv and image files for easy file access.
 1. Run the program by double-clicking on the file (make sure you have java).
@@ -52,4 +52,3 @@ For both files, the specific names of the column headers are unimportant. Additi
 and 2) the column indices for each field. The indices start at 0.
 1. Press the "Add Map Files" button as many times as needed. Choose the correct floors and corresponding maps.
 1. Choose the day of the fair to map and press the "Label" button. Repeat to map the other day, if necessary.
-```
