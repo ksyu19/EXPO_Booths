@@ -16,14 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Main extends Application {
-    /*
-    TODO: make more robust
-     */
 
-    /**
-     * Main
-     * @param args input args
-      */
     public static void main(String[] args) {
         launch(args);
     }
