@@ -12,6 +12,7 @@ You can convert the files through various online tools such as https://pdf2jpg.n
 ### Prepare two .csv files which contain the information needed to label the booths:
 
 **File 1: Company Info**
+
 Company Name | FirstDay | SecondDay | Both | Booths
 -------------|----------|-----------|------|-------
 First company name | YES | NO | NO | 101
@@ -26,6 +27,7 @@ is attending the fair on the first day only, second day only, or both days. If t
 company should only have "YES" in one of the three columns (not case-sensitive).
 
 **File 2: Booth Pixels**
+
 Floor | Booths | X Pixel | Y Pixel
 ------|--------|---------|--------
 Arena | 101 | 467 | 295
