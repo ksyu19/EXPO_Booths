@@ -6,32 +6,42 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class AddMapsHandler implements EventHandler<ActionEvent> {
     private Stage stage;
     private VBox layout;
-    private List<String> imgExt;
-    private ArrayList<MapSelectors> mapSelectors;
+    private List<String> imgExt; // list of allowed file extensions
+    private ArrayList<MapSelector> mapSelectors;
+
+    /**
+     * Constructor for AddMapsHandler - keep a list of all MapSelectors
+     * @param s stage
+     */
     public AddMapsHandler(Stage s){
         stage = s;
         this.layout = new VBox();
-        mapSelectors = new ArrayList<MapSelectors>();
+        mapSelectors = new ArrayList<MapSelector>();
         imgExt = new ArrayList<String>();
         imgExt.add("*.jpg");
         imgExt.add("*.png");
         //imgExt.add("*.gif");
     }
+
+    /**
+     * Add a MapSelector to the list and update the layout
+     * @param e event
+     */
     @Override
     public void handle(ActionEvent e){
         Button mapSelector = new Button("Choose map file");
         Text fileName = new Text();
+        // set handler for button
         FileChooserHandler mapFileHandler = new FileChooserHandler(stage, imgExt, fileName);
-        // set handlers for buttons
         mapSelector.setOnAction(mapFileHandler);
-        // add to pane
+
+        // create floor combo box
         ComboBox<Booth.Floor> floorComboBox = new ComboBox<Booth.Floor>();
         floorComboBox.getItems().addAll(
                 Booth.Floor.ARENA,
@@ -39,28 +49,58 @@ public class AddMapsHandler implements EventHandler<ActionEvent> {
                 Booth.Floor.MEZZANINE
         );
         floorComboBox.setValue(Booth.Floor.ARENA);
-        mapSelectors.add(new MapSelectors(floorComboBox, mapFileHandler));
+        // create map selector
+        mapSelectors.add(new MapSelector(floorComboBox, mapFileHandler));
+        // create layout
         HBox horizLayout = new HBox(floorComboBox, mapSelector, fileName);
         layout.getChildren().add(layout.getChildren().size(), horizLayout);
     }
+
+    /**
+     * Get layout for all map selectors
+     * @return vbox layout
+     */
     public VBox getLayout(){
         return layout;
     }
-    public ArrayList<MapSelectors> getMapSelectors(){
+
+    /**
+     * Get all map selectors
+     * @return list of map selectors
+     */
+    public ArrayList<MapSelector> getMapSelectors(){
         return mapSelectors;
     }
 }
-class MapSelectors{
-    ComboBox<Booth.Floor> floorComboBox;
-    FileChooserHandler mapFileHandler;
-    public MapSelectors(ComboBox<Booth.Floor> cb, FileChooserHandler fh){
+
+class MapSelector {
+    private ComboBox<Booth.Floor> floorComboBox;
+    private FileChooserHandler mapFileHandler;
+
+    /**
+     * Constructor - pair the floor combo box with a FileChooserHandler
+     * @param cb floor combo box
+     * @param fh map file chooser
+     */
+    public MapSelector(ComboBox<Booth.Floor> cb, FileChooserHandler fh){
         floorComboBox = cb;
         mapFileHandler = fh;
     }
+
+    /**
+     * Get floor combo box
+     * @return floorComboBox
+     */
     public ComboBox<Booth.Floor> getFloorComboBox(){
         return floorComboBox;
     }
+
+    /**
+     * Get map chooser file handler
+     * @return mapFileHandler
+     */
     public FileChooserHandler getMapFileHandler(){
         return mapFileHandler;
     }
+
 }

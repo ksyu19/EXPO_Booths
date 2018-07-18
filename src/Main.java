@@ -162,7 +162,7 @@ class LabelMapsHandler implements EventHandler<ActionEvent>{
     }
     @Override
     public void handle(ActionEvent e){
-       ArrayList<MapSelectors> mapSelectors = addMapsHandler.getMapSelectors();
+       ArrayList<MapSelector> mapSelectors = addMapsHandler.getMapSelectors();
         if(companyFileHandler.getSelectedFile() == null || pixelFileHandler.getSelectedFile() == null || mapSelectors.size() == 0){
             log.setText(log.getText() + "\n\nMust choose both .csv files and at least one map file.");
         }
@@ -175,11 +175,13 @@ class LabelMapsHandler implements EventHandler<ActionEvent>{
                 if(valid){
                     LabelMap.readInBoothPixels(pixelFileHandler.getSelectedFile().getCanonicalPath(), pixelCols[0], pixelCols[1], pixelCols[2], pixelCols[3], pixelCols[4]);
                     LabelMap.readInCompanyData(companyFileHandler.getSelectedFile().getCanonicalPath(), boothCols[0], boothCols[1], boothCols[2], boothCols[3], boothCols[4], boothCols[5]);
-                    for(MapSelectors ms: mapSelectors){
+                    for(MapSelector ms: mapSelectors){
                         Booth.Floor f = ms.getFloorComboBox().getValue();
                         File mapFile = ms.getMapFileHandler().getSelectedFile();
-                        File outputFile = new File( f + "_" + dayComboBox.getValue() + "_labeled.png");
-                        LabelMap.labelImage(mapFile, outputFile, f, dayComboBox.getValue());
+                        if(mapFile != null) {
+                            File outputFile = new File(f + "_" + dayComboBox.getValue() + "_labeled.png");
+                            LabelMap.labelImage(mapFile, outputFile, f, dayComboBox.getValue());
+                        }
                     }
                     log.setText("\nDone.");
                 }
