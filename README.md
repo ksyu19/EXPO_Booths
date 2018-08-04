@@ -1,6 +1,6 @@
 # EXPO_Booths
 
-Speed up booth-labeling process for career fair planning (Designed for the UT Austin Engineering Career EXPO).
+Speed up the process for generating labeled maps during career fair planning (Designed for the UT Austin Engineering Career EXPO).
 See the example_output folder for sample results.
 
 ## User Guide
@@ -46,9 +46,8 @@ For both files, the specific names of the column headers are unimportant. Additi
 
 ### Run the application:
 
-1. Download the EXPO_Booths.jar file (in out/artifacts/EXPO_Booths_jar folder), and put it in the same folder as the
-.csv and image files for easy file access.
-1. Run the program by double-clicking on the file (make sure you have java).
+1. Download the EXPO_Booths.jar file, and put it in the same folder as the .csv and image files for easy file access.
+1. Run the program by double-clicking on the file (make sure you have java (at least 1.8)).
 ![Application Example Image](/example_output/app_example_screenshot.png)
 1. Select the correct .csv files. The input boxes below each file specify 1) how many rows to skip for column headers,
 and 2) the column indices for each field. The indices start at 0.
